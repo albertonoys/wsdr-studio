@@ -373,8 +373,8 @@ void Engine::stop_recording(const std::string &why) {
 }
 
 void Engine::open_adapter(uint16_t pid, const json &c) {
-  if (pid != wsdr::kPid8812bu && !wsdr::jaguar3_pid(pid))
-    throw CmdError("bad_request", "pid must be 0xb812, 0xc812 or 0xa81a");
+  if (!wsdr::jaguar2_pid(pid) && !wsdr::jaguar3_pid(pid))
+    throw CmdError("bad_request", "pid must be 0xb812, 0x0138, 0xc812 or 0xa81a");
   if (rx()) { // a second open (another window, a script): tell clients the old session is gone
     close_adapter("the view was started again (another window?)");
     _cb.event(caps());
@@ -438,7 +438,7 @@ void Engine::open_adapter(uint16_t pid, const json &c) {
   // kernel driver does: it disconnects and re-enumerates on the SuperSpeed side of its port (a new
   // device: one that was not there before the switch).
   const bool usb3 = c.contains("usb3") ? flag(c, "usb3") : _usb3_default.load();
-  if (usb3 && dev.pid == wsdr::kPid8812bu && dev.speed_mbps > 0 && dev.speed_mbps < 5000) {
+  if (usb3 && wsdr::jaguar2_pid(dev.pid) && dev.speed_mbps > 0 && dev.speed_mbps < 5000) {
     std::string why;
     const wsdr::Usb3Switch sw = wsdr::request_usb3(pid, bus, port, &why);
     std::fprintf(stderr, "wsdr-studiod: USB 3 switch: %s %s\n", wsdr::usb3_switch_name(sw), why.c_str());

@@ -14,7 +14,9 @@
 //       engine + DSP only (no server); prints status JSON each second and a summary.
 #include <fcntl.h>
 #include <signal.h>
+#ifdef __linux__
 #include <sys/prctl.h>
+#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -275,7 +277,9 @@ int main(int argc, char **argv) {
   ::signal(SIGPIPE, SIG_IGN); // a closed stdout/stderr (the shell is gone) must not kill a finalising recording
   static std::atomic<bool> finished{false};
   if (a.ui_pipe) {
+#ifdef __linux__
     prctl(PR_SET_PDEATHSIG, SIGTERM); // backup: the shell died (its pipe to our stdin also closes)
+#endif
     // The shell stops us by closing our stdin; started now, so a shell that is already gone is noticed.
     std::thread([] {
       char b[256];

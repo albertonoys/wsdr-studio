@@ -215,7 +215,9 @@ if (!app.requestSingleInstanceLock()) {
       // attached to a backend started elsewhere: notice when it goes away (or its pid is reused)
       const watch = setInterval(() => {
         try {
-          if (fs.readFileSync(`/proc/${b.pid}/comm`, 'utf8').trim() !== 'wsdr-studiod') throw new Error('gone');
+          // no /proc on macOS: only whether the pid is alive (kill 0 throws when it is not)
+          if (process.platform !== 'linux') process.kill(b.pid, 0);
+          else if (fs.readFileSync(`/proc/${b.pid}/comm`, 'utf8').trim() !== 'wsdr-studiod') throw new Error('gone');
         } catch {
           clearInterval(watch);
           fail('wsdr-studio stopped', `The running wsdr-studiod (pid ${b.pid}) this window was using has exited.`);

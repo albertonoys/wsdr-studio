@@ -8,7 +8,9 @@ export const FFTS = [1024, 2048, 4096, 8192, 16384];
 export const RATES: Rate[] = [5, 4, 3, 2, 1, 0].map((r) => ({ rate_sel: r, fs: 80e6 / (1 << r) }));
 // What an adapter carries continuously before Start (MS/s). An 8812BU plugged in at USB 2 counts as
 // USB 3: Start switches it (and should that fail, the backend opens the widest continuous span).
-export const contMsps = (d: Device) => (d.pid === 0xb812 && d.speed_mbps < 5000 ? 40 : d.max_msps);
+export const contMsps = (d: Device) => (isBu(d) && d.speed_mbps < 5000 ? 40 : d.max_msps);
+// An 8812BU (RTL8822B): Realtek's own id, or the TP-Link Archer T3U Plus (2357:0138)
+export const isBu = (d: Device) => d.pid === 0xb812 || d.pid === 0x0138;
 // What an adapter offers before Start (after Start the backend's caps say it).
 export const ratesFor = (d: Device | undefined, offsetTuning: boolean): Rate[] =>
   d
@@ -50,8 +52,8 @@ export const bandsOf = (d: Device | undefined): ('2.4' | '5')[] => d?.bands ?? [
 export const hears = (d: Device | undefined, f: number) => bandsOf(d).includes(bandOf(f));
 // The udev rule (the same as the README's): self-contained, so it works from the AppImage. Its number
 // sorts before 73-seat-late.rules, where uaccess is applied (a later rule never gets it).
-export const UDEV_RULES = [0xb812, 0xc812, 0xa81a]
-  .map((pid) => `SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="${pid.toString(16)}", TAG+="uaccess", MODE="0660", GROUP="plugdev"`)
+export const UDEV_RULES = [['0bda', 'b812'], ['2357', '0138'], ['0bda', 'c812'], ['0bda', 'a81a']]
+  .map(([vid, pid]) => `SUBSYSTEM=="usb", ATTRS{idVendor}=="${vid}", ATTRS{idProduct}=="${pid}", TAG+="uaccess", MODE="0660", GROUP="plugdev"`)
   .join('\n');
 export const UDEV_CMD = `printf '%s\\n' '${UDEV_RULES.split('\n').join("' '")}' | sudo tee /etc/udev/rules.d/70-wsdr.rules > /dev/null && sudo udevadm control --reload`;
 export const LOCKED = 'End the recording to change tuning or gain';

@@ -11,7 +11,7 @@ import type { Caps, Device, DspSettings, FramePoints, Rate, RxSettings, Row, Sta
 import { Seg } from './ui';
 import {
   ANT_COLOUR, LOCKED, SLOT_NAME, UDEV_CMD, isDual, VIEW_COLOUR, bandOf, baseName, bytes, chanShort, contMsps, devKey, devLabel, devTitle, fmtClock,
-  fmtDur, gappedDuty, hears, jaguar3, loadPrefs, mhz, ratesFor, snap, spanLabel, type Mode, type Prefs, type Scale, type Tuning,
+  fmtDur, gappedDuty, hears, isBu, jaguar3, loadPrefs, mhz, ratesFor, snap, spanLabel, type Mode, type Prefs, type Scale, type Tuning,
 } from './util';
 
 type Banner = { id: number; text: string; kind: 'info' | 'error' };
@@ -742,10 +742,10 @@ export function Station(p: {
         {sel && sel.driver && sel.driver !== 'usbfs' && !open && (
           <span className="note">The kernel driver <code>{sel.driver}</code> is using this adapter; ▶ Start takes it over.</span>
         )}
-        {sel && sel.pid === 0xb812 && !open && sel.speed_mbps < 5000 && (
+        {sel && isBu(sel) && !open && sel.speed_mbps < 5000 && (
           <span className="note">Connected at USB 2: ▶ Start switches it to USB 3 when the port allows (continuous 10–40 MHz need USB 3).</span>
         )}
-        {sel && sel.pid === 0xb812 && open && caps.superspeed === false && (
+        {sel && isBu(sel) && open && caps.superspeed === false && (
           <span className="note">At USB 2: 10–40 MHz only gapped. Use a USB 3 port and cable, then replug.</span>
         )}
         {(open || sel) && mode !== 'map' && (
