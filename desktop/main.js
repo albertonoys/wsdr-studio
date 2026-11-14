@@ -55,8 +55,11 @@ function fail(title, detail) {
 
 // Start the backend and wait for its {port, token} line.
 function startBackend() {
-  // AppDir: usr/lib/wsdr-studio/electron/resources -> usr/bin
-  const exe = process.env.WSDR_STUDIOD || path.join(process.resourcesPath, '..', '..', '..', '..', 'bin', 'wsdr-studiod');
+  // AppDir: usr/lib/wsdr-studio/electron/resources -> usr/bin; macOS .app: Contents/Resources/bin
+  const exe = process.env.WSDR_STUDIOD ||
+    (process.platform === 'darwin'
+      ? path.join(process.resourcesPath, 'bin', 'wsdr-studiod')
+      : path.join(process.resourcesPath, '..', '..', '..', '..', 'bin', 'wsdr-studiod'));
   const args = backendArgs();
   return new Promise((resolve, reject) => {
     const child = spawn(exe, args, { stdio: ['pipe', 'pipe', 'pipe'] });

@@ -17,6 +17,9 @@
 #ifdef __linux__
 #include <sys/prctl.h>
 #endif
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -77,7 +80,15 @@ std::string random_token() {
 
 std::string exe_dir() {
   std::error_code ec;
+#ifdef __APPLE__
+  char buf[4096];
+  uint32_t size = sizeof buf;
+  if (_NSGetExecutablePath(buf, &size) != 0)
+    return {};
+  return fs::weakly_canonical(buf, ec).parent_path().string();
+#else
   return fs::read_symlink("/proc/self/exe", ec).parent_path().string();
+#endif
 }
 
 std::string default_webroot() {
